@@ -1,0 +1,22 @@
+{
+    "name": "alex/coding-task-data-feed",
+    "type": "project",
+    "autoload": {
+        "files": [
+            "app/helpers.php"
+        ],
+        "psr-4": {
+            "Alex\\CodingTaskDataFeed\\": "app/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Alex",
+            "email": "scristea@students.uni-mainz.de"
+        }
+    ],
+    "require": {
+        "doctrine/dbal": "^4.0",
+        "vlucas/phpdotenv": "^5.6"
+    }
+}

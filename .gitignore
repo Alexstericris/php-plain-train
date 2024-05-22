@@ -1,0 +1,11 @@
+/vendor/
+/.env
+/feed.xml
+/(Junior) PHP Engineer (all genders).docx
+/database/database.sqlite
+/.idea/.gitignore
+/.idea/coding-task-data-feed.iml
+/.idea/dataSources.xml
+/.idea/modules.xml
+/.idea/php.xml
+/.idea/vcs.xml
