@@ -10,3 +10,6 @@
 /.idea/php.xml
 /.idea/vcs.xml
 /storage/logs/cli.log
+/cli.log
+/.idea/php-test-framework.xml
+/.phpunit.result.cache
