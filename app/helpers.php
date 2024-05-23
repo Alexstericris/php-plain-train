@@ -2,8 +2,11 @@
 
 use Alex\CodingTaskDataFeed\Helpers\Arr;
 use Alex\CodingTaskDataFeed\Database;
+use Alex\CodingTaskDataFeed\LoggerSingleton;
+use Doctrine\DBAL\Query\QueryBuilder;
+use Doctrine\DBAL\Schema\AbstractSchemaManager;
 
-function env($key, $default = null)
+function env($key, $default = null): string
 {
     $dotenv = Dotenv\Dotenv::createImmutable(__DIR__.'/../');
     $dotenv->load();
@@ -13,18 +16,23 @@ function env($key, $default = null)
     return $_ENV[$key];
 }
 
-function database_path($fileName)
+function project_root_path(): string
+{
+    return __DIR__ . '/../';
+};
+
+function database_path($fileName): string
 {
     return __DIR__ . '/../database/'.$fileName;
 }
 
-function config_path($fileName)
+function config_path($fileName): string
 {
     return __DIR__ . '/../config/'.$fileName.'.php';
 }
 
 
-function config($key, $default = null)
+function config($key, $default = null): mixed
 {
     $configDir = __DIR__ . '/../config/';
     $configPath = explode('.', $key);
@@ -45,15 +53,28 @@ function config($key, $default = null)
 }
 
 
-function db()
+function db(): QueryBuilder
 {
     $conn = (new Database())->getConnection();
     return $conn->createQueryBuilder();
 }
 
-function schema()
+function schema(): AbstractSchemaManager
 {
     $conn = (new Database())->getConnection();
     return $conn->createSchemaManager();
 }
+
+function log_info($message): void
+{
+    $logger = LoggerSingleton::getInstance()->getLogger();
+    $logger->info($message);
+}
+
+function log_error($message): void
+{
+    $logger = LoggerSingleton::getInstance()->getLogger();
+    $logger->error($message);
+}
+
 

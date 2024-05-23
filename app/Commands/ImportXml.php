@@ -1,13 +1,18 @@
 <?php
-
 namespace Alex\CodingTaskDataFeed\Commands;
-use Doctrine\DBAL\Schema\Schema;
-use Doctrine\DBAL\Schema\Table;
+use Doctrine\DBAL\Types\Types;
 
 class ImportXml extends Command
 {
 
-    protected $argvTemplate = "{xml}";
+    /**
+     * @var string[]
+     */
+    protected $parameters = ['xml'];
+    /**
+     * @var string[]
+     */
+    protected $options = ["--table="];
     protected $description = "This command imports xml files of the structure defined in imports config.";
 
     public function __construct(array $arguments)
@@ -17,26 +22,63 @@ class ImportXml extends Command
 
     public function handle(): int
     {
+        $filePath = $this->parameter('xml');
+        if($filePath==null)
+            throw new \Exception("File path not specified");
 
-        //TODO implement xml parser and import into database
-        echo "importxml command\n";
-        echo env('DB_DRIVER');
-//        $schema = new Schema();
-//        $newTable=$schema->createTable('testtable');
-//        $newTable->addColumn("id", "integer", ["unsigned" => true]);
-//        $newTable->addColumn("username", "string", ["length" => 32]);
-//        $newTable->setPrimaryKey(["id"]);
-//        $newTable->addUniqueIndex(["username"]);
-//        $newTable->setComment('Some comment');
-//
-//
-//        $myForeign = $schema->createTable("my_foreign");
-//        $myForeign->addColumn("id", "integer");
-//        $myForeign->addColumn("user_id", "integer");
-//        $myForeign->addForeignKeyConstraint($newTable->getName(), ["user_id"], ["id"], ["onUpdate" => "CASCADE"]);
-//
-//        schema()->createTable($newTable);
-//        schema()->createTable($myForeign);
+        $parsedPath = pathinfo($filePath);
+        if (strlen($parsedPath['dirname'])>2) {
+            $completeFilePath = $filePath;
+        }else{
+            $completeFilePath = project_root_path() . $parsedPath['basename'];
+        }
+
+        $table=$this->option('--table=','feedxml');
+        if (!schema()->tableExists($table)) {
+            throw new \Exception("Table '$table' does not exist yet. \nYou can define a structure in config/imports.php and create a new migration in database/migrations");
+        }
+
+        $xml = simplexml_load_file($completeFilePath);
+        if ($xml == false) {
+            throw new \Exception("Cannot create XML object from path $completeFilePath");
+        }
+        $itemsArray= json_decode(json_encode($xml), true);
+        $tableOptions = config("imports.$table");
+        $values = [];
+        foreach ($tableOptions as $key => $option) {
+            $values[$key] = '?';
+        }
+        $insertQuery = db()->insert($table);
+        $insertQuery->values($values);
+        foreach ($itemsArray as $itemGroup) {
+            foreach ($itemGroup as $item){
+                foreach ($item as $itemKey => $itemValue) {
+                    $itemValue = $this->typeCheckValue($itemValue, $tableOptions[$itemKey]['type']);
+                    $insertQuery->setParameter(array_search($itemKey, array_keys($values)), $itemValue);
+                }
+                $insertQuery->executeQuery();
+                $insertQuery = db()->insert($table);
+                $insertQuery->values($values);
+            }
+        }
         return 0;
     }
+
+    private  function typeCheckValue($value,$type)
+    {
+        if ($type==Types::INTEGER) {
+            $value=(int)$value;
+        }
+        if ($type==Types::FLOAT) {
+            $value=(float)$value;
+        }
+        if ($type==Types::STRING||$type==Types::TEXT) {
+            $value=is_array($value)?'':(string)$value;
+        }
+        if ($type==Types::BOOLEAN) {
+            $value=(bool)$value;
+        }
+        return $value;
+    }
+
 }
