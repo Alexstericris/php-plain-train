@@ -10,27 +10,31 @@ class ImportExcelTest extends TestCase{
     {
         $db = db_conn();
         $db->beginTransaction();
-        try {
-            $status = (new Console())->run(['./bin/run.php', 'import:excel', 'feedxml.xlsx']);
-            assertTrue($status==0);
-            $db->rollBack();
-        }catch (Exception $e){
-            echo $e->getMessage()."\n";
-            $db->rollBack();
-        }
+        $count = db()->select('COUNT(*)')
+            ->from('feedxml')
+            ->executeQuery()->fetchOne();
+        $status = (new Console())->run(['./bin/run.php', 'import:excel', 'feedxml.xlsx']);
+        assertTrue($status == 0);
+        $newCount = db()->select('COUNT(*)')
+            ->from('feedxml')
+            ->executeQuery()->fetchOne();
+        assertTrue($newCount > $count);
+        $db->rollBack();
     }
 
     public function testImportExcelCommandWithTableOption()
     {
         $db = db_conn();
         $db->beginTransaction();
-        try {
-            $status = (new Console())->run(['./bin/run.php', 'import:excel', 'feedxml.xlsx', '--table=exampletable2']);
-            assertTrue($status == 0);
-            $db->rollBack();
-        } catch (Exception $e) {
-            echo $e->getMessage() . "\n";
-            $db->rollBack();
-        }
+        $count = db()->select('COUNT(*)')
+            ->from('exampletable2')
+            ->executeQuery()->fetchOne();
+        $status = (new Console())->run(['./bin/run.php', 'import:excel', 'feedxml.xlsx', '--table=exampletable2']);
+        assertTrue($status == 0);
+        $newCount = db()->select('COUNT(*)')
+            ->from('exampletable2')
+            ->executeQuery()->fetchOne();
+        assertTrue($newCount > $count);
+        $db->rollBack();
     }
 }
