@@ -4,12 +4,13 @@ namespace Alex\CodingTaskDataFeed;
 use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\DriverManager;
 
-class Database
+class DatabaseSingleton
 {
 
+    private static $instance = null;
     private $connection;
 
-    function __construct()
+    private function __construct()
     {
         $driver = config('db.driver');
         $database = config("db.server.$driver.database");
@@ -22,12 +23,17 @@ class Database
         $this->connection = DriverManager::getConnection($connectionParams, $config);
     }
 
+    public static function getInstance()
+    {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
 
-    /**
-     * @return \Doctrine\DBAL\Connection
-     */
     public function getConnection()
     {
         return $this->connection;
     }
+
 }

@@ -1,7 +1,7 @@
 <?php
 
 use Alex\CodingTaskDataFeed\Helpers\Arr;
-use Alex\CodingTaskDataFeed\Database;
+use Alex\CodingTaskDataFeed\DatabaseSingleton;
 use Alex\CodingTaskDataFeed\LoggerSingleton;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Schema\AbstractSchemaManager;
@@ -54,7 +54,8 @@ function config($key, $default = null): mixed
 
 function db_conn()
 {
-    return (new Database())->getConnection();
+    $db = DatabaseSingleton::getInstance();
+    return $db->getConnection();
 }
 
 
