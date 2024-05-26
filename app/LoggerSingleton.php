@@ -15,7 +15,7 @@ class LoggerSingleton
     {
         $this->logger = new Logger($loggerName);
         $driver = config('log.channel');
-        $path = project_root_path() . config("log.channels.$driver");
+        $path = storage_path('logs/' . config("log.channels.$driver"));
         $this->logger->pushHandler(new StreamHandler($path, $level));
     }
 

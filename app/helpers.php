@@ -25,6 +25,11 @@ function database_path($fileName): string
 {
     return __DIR__ . '/../database/'.$fileName;
 }
+function storage_path($fileName): string
+{
+    return __DIR__ . '/../storage/'.$fileName;
+}
+
 
 function config_path($fileName): string
 {
