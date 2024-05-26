@@ -14,6 +14,12 @@ There is still room for improvements.
 
 The code should be readable and self-explanatory, so there are no comments.
 
+### Possible improvements:
+1. Change the commands in order to be parallelized
+2. Create command to migrate all migration files in batches (like in Laravel)
+3. Make the tests more detailed
+
+
 ## Installation
 
 1. Clone the repository:

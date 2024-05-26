@@ -17,6 +17,7 @@ class Database
             'driver' => $driver,
             'path' => $database,
         ];
+
         $config = new Configuration();
         $this->connection = DriverManager::getConnection($connectionParams, $config);
     }

@@ -1,6 +1,5 @@
 /vendor/
 /.env
-/feed.xml
 /(Junior) PHP Engineer (all genders).docx
 /database/database.sqlite
 /.idea/.gitignore
@@ -13,3 +12,6 @@
 /cli.log
 /.idea/php-test-framework.xml
 /.phpunit.result.cache
+/.idea/codeception.xml
+/.idea/phpspec.xml
+/.idea/phpunit.xml

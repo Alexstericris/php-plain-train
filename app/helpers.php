@@ -52,16 +52,21 @@ function config($key, $default = null): mixed
 
 }
 
+function db_conn()
+{
+    return (new Database())->getConnection();
+}
+
 
 function db(): QueryBuilder
 {
-    $conn = (new Database())->getConnection();
+    $conn = db_conn();
     return $conn->createQueryBuilder();
 }
 
 function schema(): AbstractSchemaManager
 {
-    $conn = (new Database())->getConnection();
+    $conn = db_conn();
     return $conn->createSchemaManager();
 }
 

@@ -13,7 +13,8 @@ class ImportXml extends Command
      * @var string[]
      */
     protected $options = ["--table="];
-    protected $description = "This command imports xml files of the structure defined in imports config.";
+
+    protected $description = "This command imports xml files of the structure defined in imports config.\nUsage: ./bin/run.php import:xml <file.xml> --table=customtable";
 
     public function __construct(array $arguments)
     {
@@ -22,6 +23,11 @@ class ImportXml extends Command
 
     public function handle(): int
     {
+        if($this->option('--help')){
+            $this->help();
+            return 1;
+        }
+
         $filePath = $this->parameter('xml');
         if($filePath==null)
             throw new \Exception("File path not specified");
@@ -62,23 +68,6 @@ class ImportXml extends Command
             }
         }
         return 0;
-    }
-
-    private  function typeCheckValue($value,$type)
-    {
-        if ($type==Types::INTEGER) {
-            $value=(int)$value;
-        }
-        if ($type==Types::FLOAT) {
-            $value=(float)$value;
-        }
-        if ($type==Types::STRING||$type==Types::TEXT) {
-            $value=is_array($value)?'':(string)$value;
-        }
-        if ($type==Types::BOOLEAN) {
-            $value=(bool)$value;
-        }
-        return $value;
     }
 
 }
