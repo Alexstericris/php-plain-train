@@ -21,6 +21,11 @@ function project_root_path(): string
     return __DIR__ . '/../';
 };
 
+function views_path($fileName): string
+{
+    return project_root_path().'/views/'.$fileName;
+};
+
 function database_path($fileName): string
 {
     return __DIR__ . '/../database/'.$fileName;
