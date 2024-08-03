@@ -2,6 +2,7 @@
 
 namespace Alex\CodingTaskDataFeed\Commands;
 use Alex\CodingTaskDataFeed\Helpers\Arr;
+use Alex\CodingTaskDataFeed\Services\DataWriter\DataWriterInterface;
 use Doctrine\DBAL\Types\Types;
 
 abstract class Command
@@ -11,12 +12,50 @@ abstract class Command
     protected $description;
     protected $arguments;
 
-    public function __construct(array $arguments)
+    public function __construct(protected DataWriterInterface $dataWriter){}
+
+    abstract protected function getFilePathParameterKey(): string;
+    abstract protected function parseFile(string $filePath): array;
+
+    public function handle($arguments): int
     {
         $this->arguments = $arguments;
+        if ($this->option('--help')) {
+            $this->help();
+            return 1;
+        }
+
+        $filePath = $this->parameter($this->getFilePathParameterKey());
+        if ($filePath == null) {
+            throw new \Exception("File path not specified");
+        }
+        $completeFilePath = $this->getCompleteFilePath($filePath);
+
+        $table = $this->option('--table=', 'feedxml');
+        if (!schema()->tableExists($table)) {
+            throw new \Exception("Table '$table' does not exist yet. Define a structure in config/imports.php and create a new migration in database/migrations");
+        }
+
+        $colsFilter = $this->option('--filter=', 'id');
+        $colsFilter = explode(',', $colsFilter);
+
+        $data = $this->parseFile($completeFilePath);
+
+        $tableOptions = config("imports.$table");
+        $this->dataWriter->insertData($data, $tableOptions, $table, $colsFilter);
+
+        return 0;
     }
 
-    abstract protected function handle(): int;
+    protected function getCompleteFilePath(string $filePath): string
+    {
+        $parsedPath = pathinfo($filePath);
+        if (strlen($parsedPath['dirname']) > 2) {
+            return $filePath;
+        } else {
+            return project_root_path() . $parsedPath['basename'];
+        }
+    }
 
     public function parameter($key)
     {
@@ -27,9 +66,9 @@ abstract class Command
         return null;
     }
 
-    public function option($key,$default = null)
+    public function option($key, $default = null)
     {
-        if (in_array('--help',$this->arguments)) {
+        if (in_array('--help', $this->arguments)) {
             return true;
         }
         foreach ($this->arguments as $argument) {
@@ -40,24 +79,8 @@ abstract class Command
         return $default;
     }
 
-    protected function typeCheckValue($value, $type)
+    public function help()
     {
-        if ($type==Types::INTEGER) {
-            $value=(int)$value;
-        }
-        if ($type==Types::FLOAT) {
-            $value=(float)$value;
-        }
-        if ($type==Types::STRING||$type==Types::TEXT) {
-            $value=is_array($value)?'':(string)$value;
-        }
-        if ($type==Types::BOOLEAN) {
-            $value=(bool)$value;
-        }
-        return $value;
-    }
-
-    public function help(){
         echo $this->description;
     }
 

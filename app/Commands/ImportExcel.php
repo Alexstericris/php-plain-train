@@ -3,6 +3,8 @@
 namespace Alex\CodingTaskDataFeed\Commands;
 
 
+use Alex\CodingTaskDataFeed\Services\DataWriter\DataWriterInterface;
+
 class ImportExcel extends Command
 {
     protected $parameters = ['xlsx'];
@@ -12,66 +14,33 @@ class ImportExcel extends Command
     protected $options = ["--table=", "--filterCols="];
     protected $description = "This command imports excel files of the structure defined in imports config.\nUsage: ./bin/run.php import:excel <file.xlsx> --table=customtable --filterCols=id,col1";
 
-
-    public function handle(): int
+    protected function getFilePathParameterKey(): string
     {
-        if($this->option('--help')){
-            $this->help();
-            return 1;
-        }
+        return 'xlsx';
+    }
 
-        $filePath = $this->parameter('xlsx');
-        if($filePath==null)
-            throw new \Exception("File path not specified");
-
-        $parsedPath = pathinfo($filePath);
-        if (strlen($parsedPath['dirname'])>2) {
-            $completeFilePath = $filePath;
-        }else{
-            $completeFilePath = project_root_path() . $parsedPath['basename'];
-        }
-
-        $table=$this->option('--table=','feedxml');
-        if (!schema()->tableExists($table)) {
-            throw new \Exception("Table '$table' does not exist yet. \nYou can define a structure in config/imports.php and create a new migration in database/migrations");
-        }
-
-        $colsFilter = $this->option('--filter=', 'id');
-        $colsFilter = explode(',', $colsFilter);
-
+    protected function parseFile(string $filePath): array
+    {
         $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
-        $spreadsheet = $reader->load($completeFilePath);
+        $spreadsheet = $reader->load($filePath);
         $worksheet = $spreadsheet->getActiveSheet();
 
-
-        $tableOptions = config("imports.$table");
-        $values = [];
-        foreach ($tableOptions as $key => $option) {
-            $values[$key] = '?';
-        }
-        $insertQuery = db()->insert($table);
-        $insertQuery->values($values);
+        $data = [];
         $headers = [];
+
         foreach ($worksheet->getRowIterator() as $rowIndex => $row) {
-            if ($rowIndex === 1) {
-                foreach ($row->getCellIterator() as $columnIndex => $cell) {
-                    $headers[$columnIndex] = $cell->getValue();
-                }
-                continue;
-            }
-
+            $rowData = [];
             foreach ($row->getCellIterator() as $columnIndex => $cell) {
-                if (in_array($headers[$columnIndex],$colsFilter)) {
-                    continue;
+                if ($rowIndex === 1) {
+                    $headers[$columnIndex] = $cell->getValue();
+                } else {
+                    $rowData[$headers[$columnIndex]] = $cell->getValue();
                 }
-                $itemValue = $this->typeCheckValue($cell->getValue(), $tableOptions[$headers[$columnIndex]]['type']);
-                $insertQuery->setParameter(array_search($headers[$columnIndex], array_keys($values)), $itemValue);
             }
-            $insertQuery->executeQuery();
-            $insertQuery = db()->insert($table);
-            $insertQuery->values($values);
+            if ($rowIndex > 1) {
+                $data[] = $rowData;
+            }
         }
-
-        return 0;
+        return $data;
     }
 }

@@ -4,6 +4,7 @@ namespace Alex\CodingTaskDataFeed;
 use Alex\CodingTaskDataFeed\Commands\ImportCsv;
 use Alex\CodingTaskDataFeed\Commands\ImportExcel;
 use Alex\CodingTaskDataFeed\Commands\ImportXml;
+use Alex\CodingTaskDataFeed\Services\DataWriter\DataWriter;
 
 class Console
 {
@@ -30,7 +31,9 @@ class Console
             return 1;
         }
         try {
-            $status = (new $this->commands[$command](array_slice($arguments, 2, sizeof($arguments))))->handle();
+            $command = new $this->commands[$command](new DataWriter());
+            $arguments = array_slice($arguments, 2, sizeof($arguments));
+            $status = $command->handle($arguments);
             return $status;
         } catch (\Exception $exception) {
             echo $exception->getMessage() . "\n";
